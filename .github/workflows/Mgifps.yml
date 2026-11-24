@@ -93,7 +93,6 @@ jobs:
           org.gradle.parallel=true
           org.gradle.caching=true
           android.enableR8.fullMode=true
-          android.useAndroidX=true
           EOF
 
           # ── app/build.gradle ─────────────────────────────────────
@@ -430,6 +429,7 @@ jobs:
           import java.util.List;
 
           import rikka.shizuku.Shizuku;
+          import rikka.shizuku.ShizukuRemoteProcess;
 
           public class OverlayService extends Service {
 
@@ -527,7 +527,7 @@ jobs:
                           ? "dumpsys SurfaceFlinger --latency"
                           : "dumpsys gfxinfo " + targetPkg + " framestats";
 
-                      Process p = Shizuku.newProcess(new String[]{"sh", "-c", cmd}, null, null);
+                      ShizukuRemoteProcess p = Shizuku.newProcess(new String[]{"sh", "-c", cmd}, null, null);
                       BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                       List<Long> newTimes = new ArrayList<>();
