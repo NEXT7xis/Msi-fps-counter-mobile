@@ -1,0 +1,648 @@
+name: FPS Counter APK (Shizuku)
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Criar projeto
+        run: |
+          set -e
+          mkdir -p fp/app/src/main/java/dev/sam/fpscounter
+          mkdir -p fp/app/src/main/res/values
+          mkdir -p fp/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p fp/app/src/main/res/mipmap-anydpi
+          mkdir -p fp/app/src/main/res/drawable
+          cd fp
+
+          # ── keystore ──────────────────────────────────────────────
+          base64 -d > app/fps.keystore <<'KSEOF'
+          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
+          fzD2wMUyjEnOTg==
+          KSEOF
+
+          # ── settings.gradle ───────────────────────────────────────
+          cat > settings.gradle <<'EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositories { google(); mavenCentral() } }
+          rootProject.name = "FpsCounter"
+          include ':app'
+          EOF
+
+          # ── build.gradle raiz ────────────────────────────────────
+          cat > build.gradle <<'EOF'
+          plugins { id 'com.android.application' version '8.5.2' apply false }
+          EOF
+
+          # ── gradle.properties ────────────────────────────────────
+          cat > gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2g
+          org.gradle.parallel=true
+          org.gradle.caching=true
+          android.enableR8.fullMode=true
+          EOF
+
+          # ── app/build.gradle ─────────────────────────────────────
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'dev.sam.fpscounter'
+            compileSdk 34
+            defaultConfig {
+              applicationId 'dev.sam.fpscounter'
+              minSdk 26
+              targetSdk 34
+              versionCode 1
+              versionName '1.0'
+            }
+            signingConfigs {
+              release {
+                storeFile file('fps.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+              }
+            }
+            buildTypes {
+              release {
+                minifyEnabled true
+                shrinkResources true
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                signingConfig signingConfigs.release
+              }
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_17
+              targetCompatibility JavaVersion.VERSION_17
+            }
+          }
+          dependencies {
+            implementation 'dev.rikka.shizuku:api:13.1.5'
+            implementation 'dev.rikka.shizuku:provider:13.1.5'
+          }
+          EOF
+
+          # ── proguard ─────────────────────────────────────────────
+          cat > app/proguard-rules.pro <<'EOF'
+          -keep class rikka.shizuku.** { *; }
+          -keep class dev.sam.fpscounter.** { *; }
+          EOF
+
+          # ── AndroidManifest.xml ───────────────────────────────────
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+
+            <application
+              android:label="FPS Counter"
+              android:allowBackup="false"
+              android:theme="@android:style/Theme.Material.NoActionBar">
+
+              <activity
+                android:name=".MainActivity"
+                android:exported="true"
+                android:configChanges="orientation|screenSize">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+              </activity>
+
+              <service
+                android:name=".OverlayService"
+                android:exported="false"
+                android:foregroundServiceType="specialUse">
+                <property
+                  android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                  android:value="fps_overlay"/>
+              </service>
+
+              <!-- Shizuku provider -->
+              <provider
+                android:name="rikka.shizuku.ShizukuProvider"
+                android:authorities="dev.sam.fpscounter.shizuku"
+                android:multiprocess="false"
+                android:enabled="true"
+                android:exported="true"
+                android:permission="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+
+            </application>
+          </manifest>
+          EOF
+
+          # ── res/values/strings.xml ───────────────────────────────
+          cat > app/src/main/res/values/strings.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <string name="app_name">FPS Counter</string>
+          </resources>
+          EOF
+
+          # ── ícone launcher simples ───────────────────────────────
+          cat > app/src/main/res/drawable/ic_launcher_bg.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+            <solid android:color="#000000"/>
+          </shape>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_launcher_fg.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="108dp" android:height="108dp"
+            android:viewportWidth="108" android:viewportHeight="108">
+            <path android:fillColor="#FFFFFF"
+              android:pathData="M28,70 L28,38 L38,38 L38,70 Z
+                                M42,38 L66,38 L66,46 L52,46 L52,50 L64,50 L64,58 L52,58 L52,62 L66,62 L66,70 L42,70 Z
+                                M68,38 L80,38 L80,70 L68,70 Z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@drawable/ic_launcher_bg"/>
+            <foreground android:drawable="@drawable/ic_launcher_fg"/>
+          </adaptive-icon>
+          EOF
+
+          cat > app/src/main/res/mipmap-anydpi/ic_launcher.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:drawable="@drawable/ic_launcher_bg"/>
+            <item android:drawable="@drawable/ic_launcher_fg"/>
+          </layer-list>
+          EOF
+
+          # ── MainActivity.java ─────────────────────────────────────
+          cat > app/src/main/java/dev/sam/fpscounter/MainActivity.java <<'EOF'
+          package dev.sam.fpscounter;
+
+          import android.app.Activity;
+          import android.app.AlertDialog;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.provider.Settings;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.widget.Button;
+          import android.widget.EditText;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+          import android.widget.Toast;
+          import rikka.shizuku.Shizuku;
+
+          public class MainActivity extends Activity {
+
+              private static final int REQ_OVERLAY = 1;
+              private static final int SHIZUKU_CODE = 100;
+
+              @Override
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
+
+                  // layout
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setGravity(Gravity.CENTER);
+                  root.setBackgroundColor(0xFF000000);
+                  root.setPadding(48, 48, 48, 48);
+
+                  TextView title = new TextView(this);
+                  title.setText("FPS Counter");
+                  title.setTextColor(0xFFFFFFFF);
+                  title.setTextSize(24);
+                  title.setGravity(Gravity.CENTER);
+                  root.addView(title);
+
+                  TextView info = new TextView(this);
+                  info.setText("Overlay arrastável com FPS real via Shizuku");
+                  info.setTextColor(0xFFAAAAAA);
+                  info.setTextSize(13);
+                  info.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  lp.setMargins(0, 12, 0, 32);
+                  info.setLayoutParams(lp);
+                  root.addView(info);
+
+                  // campo package
+                  TextView pkgLabel = new TextView(this);
+                  pkgLabel.setText("Package do jogo:");
+                  pkgLabel.setTextColor(0xFFCCCCCC);
+                  pkgLabel.setTextSize(13);
+                  root.addView(pkgLabel);
+
+                  EditText pkgField = new EditText(this);
+                  pkgField.setHint("ex: com.mihoyo.hkrpg");
+                  pkgField.setTextColor(0xFFFFFFFF);
+                  pkgField.setHintTextColor(0xFF666666);
+                  pkgField.setBackgroundColor(0xFF111111);
+                  pkgField.setPadding(24, 16, 24, 16);
+                  pkgField.setText(getPreferences(MODE_PRIVATE).getString("pkg", ""));
+                  LinearLayout.LayoutParams epLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  epLp.setMargins(0, 8, 0, 24);
+                  pkgField.setLayoutParams(epLp);
+                  root.addView(pkgField);
+
+                  Button btnStart = makeBtn("Iniciar Overlay");
+                  Button btnStop  = makeBtn("Parar Overlay");
+                  btnStop.setAlpha(0.5f);
+
+                  btnStart.setOnClickListener(v -> {
+                      String pkg = pkgField.getText().toString().trim();
+                      if (pkg.isEmpty()) {
+                          Toast.makeText(this, "Digite o package do jogo", Toast.LENGTH_SHORT).show();
+                          return;
+                      }
+                      getPreferences(MODE_PRIVATE).edit().putString("pkg", pkg).apply();
+
+                      if (!Settings.canDrawOverlays(this)) {
+                          Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                              Uri.parse("package:" + getPackageName()));
+                          startActivityForResult(i, REQ_OVERLAY);
+                          return;
+                      }
+                      if (!Shizuku.pingBinder()) {
+                          toast("Shizuku não está rodando");
+                          return;
+                      }
+                      if (Shizuku.checkSelfPermission() != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                          Shizuku.requestPermission(SHIZUKU_CODE);
+                          return;
+                      }
+                      startOverlay(pkg);
+                  });
+
+                  btnStop.setOnClickListener(v -> {
+                      stopService(new Intent(this, OverlayService.class));
+                      toast("Overlay parado");
+                      btnStart.setAlpha(1f);
+                      btnStop.setAlpha(0.5f);
+                  });
+
+                  Shizuku.addRequestPermissionResultListener((code, result) -> {
+                      if (result == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                          String pkg = pkgField.getText().toString().trim();
+                          if (!pkg.isEmpty()) startOverlay(pkg);
+                      } else {
+                          toast("Permissão Shizuku negada");
+                      }
+                  });
+
+                  root.addView(btnStart);
+
+                  LinearLayout.LayoutParams stopLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  stopLp.setMargins(0, 12, 0, 0);
+                  btnStop.setLayoutParams(stopLp);
+                  root.addView(btnStop);
+
+                  TextView note = new TextView(this);
+                  note.setText("Arraste o contador pela tela enquanto joga.\nDeixe em branco para medir FPS global.");
+                  note.setTextColor(0xFF666666);
+                  note.setTextSize(11);
+                  note.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams noteLp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  noteLp.setMargins(0, 32, 0, 0);
+                  note.setLayoutParams(noteLp);
+                  root.addView(note);
+
+                  setContentView(root);
+              }
+
+              private void startOverlay(String pkg) {
+                  Intent i = new Intent(this, OverlayService.class);
+                  i.putExtra("pkg", pkg);
+                  startForegroundService(i);
+                  toast("Overlay iniciado");
+              }
+
+              private Button makeBtn(String text) {
+                  Button b = new Button(this);
+                  b.setText(text);
+                  b.setTextColor(0xFFFFFFFF);
+                  b.setBackgroundColor(0xFF222222);
+                  LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  b.setLayoutParams(lp);
+                  return b;
+              }
+
+              private void toast(String msg) {
+                  Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+              }
+
+              @Override
+              protected void onActivityResult(int req, int res, Intent data) {
+                  super.onActivityResult(req, res, data);
+                  if (req == REQ_OVERLAY && Settings.canDrawOverlays(this)) {
+                      String pkg = getPreferences(MODE_PRIVATE).getString("pkg", "");
+                      if (!pkg.isEmpty()) startOverlay(pkg);
+                  }
+              }
+          }
+          EOF
+
+          # ── OverlayService.java ───────────────────────────────────
+          cat > app/src/main/java/dev/sam/fpscounter/OverlayService.java <<'EOF'
+          package dev.sam.fpscounter;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.Service;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.graphics.PixelFormat;
+          import android.graphics.Typeface;
+          import android.os.Handler;
+          import android.os.IBinder;
+          import android.os.Looper;
+          import android.view.Gravity;
+          import android.view.MotionEvent;
+          import android.view.WindowManager;
+          import android.widget.TextView;
+
+          import java.io.BufferedReader;
+          import java.io.InputStreamReader;
+          import java.util.ArrayList;
+          import java.util.List;
+
+          import rikka.shizuku.Shizuku;
+
+          public class OverlayService extends Service {
+
+              private static final String CH = "fps_overlay";
+              private static final int NOTIF_ID = 42;
+              // número de frames a acumular antes de calcular média (1 seg a 60fps ≈ 60 frames)
+              private static final int SAMPLE_WINDOW = 60;
+
+              private WindowManager wm;
+              private TextView fpsView;
+              private WindowManager.LayoutParams params;
+              private Handler handler = new Handler(Looper.getMainLooper());
+              private String targetPkg = "";
+              private boolean running = false;
+
+              // timestamps FRAME_COMPLETED do framestats — nanoseconds
+              private final List<Long> frameTimes = new ArrayList<>();
+
+              @Override
+              public void onCreate() {
+                  super.onCreate();
+                  wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+                  createNotifChannel();
+                  startForeground(NOTIF_ID, buildNotif());
+              }
+
+              @Override
+              public int onStartCommand(Intent intent, int flags, int startId) {
+                  if (intent != null) targetPkg = intent.getStringExtra("pkg");
+                  if (targetPkg == null) targetPkg = "";
+                  startOverlay();
+                  return START_STICKY;
+              }
+
+              @Override
+              public IBinder onBind(Intent i) { return null; }
+
+              @Override
+              public void onDestroy() {
+                  running = false;
+                  handler.removeCallbacksAndMessages(null);
+                  if (fpsView != null) {
+                      try { wm.removeView(fpsView); } catch (Exception ignored) {}
+                      fpsView = null;
+                  }
+                  super.onDestroy();
+              }
+
+              // ── overlay view ─────────────────────────────────────
+              private void startOverlay() {
+                  if (fpsView != null) return;
+
+                  fpsView = new TextView(this);
+                  fpsView.setText("-- FPS");
+                  fpsView.setTextColor(Color.WHITE);
+                  fpsView.setTextSize(14);           // tamanho compacto estilo MSI
+                  fpsView.setTypeface(Typeface.MONOSPACE);
+                  fpsView.setBackgroundColor(Color.BLACK);
+                  fpsView.setPadding(10, 4, 10, 4);
+
+                  params = new WindowManager.LayoutParams(
+                      WindowManager.LayoutParams.WRAP_CONTENT,
+                      WindowManager.LayoutParams.WRAP_CONTENT,
+                      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                          | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                          | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                      PixelFormat.TRANSLUCENT
+                  );
+                  params.gravity = Gravity.TOP | Gravity.START;
+                  params.x = 0;
+                  params.y = 100;
+
+                  // drag
+                  fpsView.setOnTouchListener(new DragListener());
+
+                  wm.addView(fpsView, params);
+                  running = true;
+                  scheduleRead();
+              }
+
+              // ── leitura via Shizuku ───────────────────────────────
+              private void scheduleRead() {
+                  handler.postDelayed(() -> {
+                      if (!running) return;
+                      new Thread(this::readFramestats).start();
+                      scheduleRead();
+                  }, 1000);
+              }
+
+              private void readFramestats() {
+                  try {
+                      // dumpsys gfxinfo <pkg> framestats — requer permissão adb
+                      String cmd = targetPkg.isEmpty()
+                          ? "dumpsys SurfaceFlinger --latency"
+                          : "dumpsys gfxinfo " + targetPkg + " framestats";
+
+                      Process p = Shizuku.newProcess(new String[]{"sh", "-c", cmd}, null, null);
+                      BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                      List<Long> newTimes = new ArrayList<>();
+                      String line;
+                      boolean inFrames = false;
+
+                      while ((line = br.readLine()) != null) {
+                          line = line.trim();
+
+                          // framestats header
+                          if (line.startsWith("---PROFILEDATA---")) { inFrames = true; continue; }
+                          if (!inFrames) continue;
+                          if (line.startsWith("---PROFILEDATA---")) break; // segundo marker = fim
+
+                          // cada linha: INTENDED_VSYNC VSYNC OLDEST_INPUT_EVENT NEWEST_INPUT_EVENT
+                          //             RENDER_START RENDER_DONE FRAME_COMPLETED
+                          // 7 colunas separadas por espaço/tab
+                          String[] cols = line.split("\\s+");
+                          if (cols.length < 7) continue;
+                          try {
+                              long frameCompleted = Long.parseLong(cols[6]);
+                              if (frameCompleted > 0) newTimes.add(frameCompleted);
+                          } catch (NumberFormatException ignored) {}
+                      }
+                      br.close();
+                      p.destroy();
+
+                      int fps = calcFps(newTimes);
+                      handler.post(() -> {
+                          if (fpsView != null) fpsView.setText(fps + " FPS");
+                      });
+
+                  } catch (Exception e) {
+                      handler.post(() -> {
+                          if (fpsView != null) fpsView.setText("ERR");
+                      });
+                  }
+              }
+
+              // ── cálculo de FPS ────────────────────────────────────
+              // usa timestamps FRAME_COMPLETED em nanoseconds
+              // FPS = (N-1 frames) / (último - primeiro) convertido para segundos
+              private int calcFps(List<Long> times) {
+                  // merge com janela existente, mantém só os últimos SAMPLE_WINDOW
+                  synchronized (frameTimes) {
+                      frameTimes.addAll(times);
+                      // remove duplicatas e ordena
+                      java.util.TreeSet<Long> sorted = new java.util.TreeSet<>(frameTimes);
+                      frameTimes.clear();
+                      frameTimes.addAll(sorted);
+                      // janela deslizante
+                      while (frameTimes.size() > SAMPLE_WINDOW) frameTimes.remove(0);
+
+                      if (frameTimes.size() < 2) return 0;
+
+                      long first = frameTimes.get(0);
+                      long last  = frameTimes.get(frameTimes.size() - 1);
+                      double seconds = (last - first) / 1_000_000_000.0;
+                      if (seconds <= 0) return 0;
+
+                      return (int) Math.round((frameTimes.size() - 1) / seconds);
+                  }
+              }
+
+              // ── drag ──────────────────────────────────────────────
+              private class DragListener implements android.view.View.OnTouchListener {
+                  private int initX, initY;
+                  private float touchX, touchY;
+
+                  @Override
+                  public boolean onTouch(android.view.View v, MotionEvent e) {
+                      switch (e.getAction()) {
+                          case MotionEvent.ACTION_DOWN:
+                              initX  = params.x;
+                              initY  = params.y;
+                              touchX = e.getRawX();
+                              touchY = e.getRawY();
+                              return true;
+                          case MotionEvent.ACTION_MOVE:
+                              params.x = initX + (int)(e.getRawX() - touchX);
+                              params.y = initY + (int)(e.getRawY() - touchY);
+                              wm.updateViewLayout(fpsView, params);
+                              return true;
+                      }
+                      return false;
+                  }
+              }
+
+              // ── notificação foreground ────────────────────────────
+              private void createNotifChannel() {
+                  NotificationChannel ch = new NotificationChannel(
+                      CH, "FPS Overlay", NotificationManager.IMPORTANCE_LOW);
+                  ch.setShowBadge(false);
+                  ((NotificationManager) getSystemService(NOTIFICATION_SERVICE))
+                      .createNotificationChannel(ch);
+              }
+
+              private Notification buildNotif() {
+                  return new Notification.Builder(this, CH)
+                      .setSmallIcon(android.R.drawable.ic_menu_info_details)
+                      .setContentTitle("FPS Counter")
+                      .setContentText("Overlay ativo")
+                      .setOngoing(true)
+                      .build();
+              }
+          }
+          EOF
+
+      - name: Compilar
+        working-directory: fp
+        run: |
+          gradle wrapper --gradle-version 8.7 --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: FPS-Counter-APK
+          path: fp/app/build/outputs/apk/release/app-release.apk
