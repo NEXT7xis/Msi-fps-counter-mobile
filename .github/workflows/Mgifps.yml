@@ -93,6 +93,7 @@ jobs:
           org.gradle.parallel=true
           org.gradle.caching=true
           android.enableR8.fullMode=true
+          android.useAndroidX=true
           EOF
 
           # ── app/build.gradle ─────────────────────────────────────
